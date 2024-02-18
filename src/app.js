@@ -16,4 +16,11 @@ app.use(express.urlencoded({extended:true, limit:"16kb"})) //urlencoding techniq
 app.use(express.static("public")) //making the public folder as static for express
 app.use(cookieParser()) //for creating and getting cookie session from users browser
 
+//routes import
+import userRouter from './routes/user.routes.js'
+
+app.use('/api/v1/users', userRouter)
+//  http://localhost:8000/api/v1/users/(userRouter jo usko route de like /register ya /login)
+
+
 export { app }
