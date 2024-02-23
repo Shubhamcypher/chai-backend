@@ -11,11 +11,12 @@ const uploadOnCloudinary = async (localFilePath)=>{
     try {
         if(!localFilePath) return null;
 
-        const response=cloudinary.uploader.upload(localFilePath,{
-            resource_type: auto
+        const response= await cloudinary.uploader.upload(localFilePath,{
+            resource_type: "auto"
         })
         //File uploaded successfully
-        console.log("File upload on cloudinary Successful","on URL: ",response.url);
+        // console.log("File upload on cloudinary Successful","on URL: ",response.url);
+        fs.unlinkSync(localFilePath)
         return response;
         //see catch mei tab nahi aayga jab !localFilePath ho, that means file server par toh aa gyi hai uploading on cloudinary mei kuch issue hua hai
     } catch (error) {
