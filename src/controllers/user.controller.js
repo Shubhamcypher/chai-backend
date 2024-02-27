@@ -160,7 +160,7 @@ const logoutUser = asyncHandler(async (req,res) => {
         req.user._id,
         {
             $set:{
-                refreshToken : undefined
+                refreshToken : 1 //this removes the field from the document
             }
         },
         {
@@ -180,8 +180,9 @@ const logoutUser = asyncHandler(async (req,res) => {
     .json(new ApiResponse(200,{},"user logged out"))
 })
 
+
 const refreshAccessToken = asyncHandler(async(req,res)=>{
-    const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
     if(!incomingRefreshToken){
         throw new ApiError(401,"Unauthorized request")
@@ -223,8 +224,13 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
     }
 })
 
+
+
+//here using postman if we try to send in form data error is occuring
 const changeCurrentPassword = asyncHandler(async(req,res)=>{
     const {oldPassword, newPassword} = req.body
+
+    console.log(oldPassword,newPassword);
 
     const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
@@ -248,20 +254,27 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
 
 })
 
-const getCurrentUser = asyncHandler(async(req,res)=>{
+const getCurrentUser = asyncHandler(async(req, res) => {
+    const {_id,fullName,username,email} = req.user
     return res
     .status(200)
     .json(new ApiResponse(
         200,
-        req.user,
-        "user fetched successfully"
+        {
+            _id,
+            fullName,
+            username,
+            email
+        },
+        "User fetched successfully"
     ))
 })
 
-const updateAccountDetails = asyncHandler(async(req,res)=>{
-    const {username,email} = req.body
 
-    if (!username || !email) {
+const updateAccountDetails = asyncHandler(async(req,res)=>{
+    const {fullName,email,username} = req.body
+
+    if (!fullName || !email) {
         throw new ApiError(400,"All fields are required")
     }
 
@@ -270,7 +283,8 @@ const updateAccountDetails = asyncHandler(async(req,res)=>{
         {
             $set:{
                 fullName,
-                email
+                email,
+                username
             }
         },
         {new:true}
@@ -388,14 +402,14 @@ const getChannelUserProfile = asyncHandler(async(req,res)=>{
         {
             $addFields: {
                 subscribersCount : {
-                    $size : "$subscribersCount"
+                    $size : "$subscribers"
                 },
                 channelsSubscribedToCount : {
                     $size : "$subscribedTo"
                 },
                 isSubscribed : {
                     $cond : {
-                        if:{$in:[req.user?._id,"subscribers.subscriber"]},
+                        if:{$in:[req.user?._id,"$subscribers.subscriber"]},
                         then:true,
                         else:false
                     }
@@ -415,6 +429,9 @@ const getChannelUserProfile = asyncHandler(async(req,res)=>{
             }
         }
     ])
+  
+ 
+    
 
     if(!channel.length){
         throw new ApiError(400,"Channel does not exist")
@@ -423,7 +440,7 @@ const getChannelUserProfile = asyncHandler(async(req,res)=>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200,channel[0],"user channel fetched successfully")
+        new ApiResponse(200,channel,"user channel fetched successfully")
     )
 
 })
